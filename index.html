@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050505"><title>NOVA</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bk:#050505;--bk2:#121008;--bk3:#1c1810;--gold:#d4af37;--gold2:#f0d27a;--deep:#8a6a12;--ink:#f6edd0;--mut:#a89968;--ok:#9bd08a}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bk);color:var(--ink);font:15px/1.5 Manrope,system-ui,sans-serif;display:flex;justify-content:center}
+#app{width:100%;max-width:480px;min-height:100vh;padding:20px 18px 150px;background:radial-gradient(120% 60% at 50% -10%,#3a2c07 0,var(--bk) 60%)}
+h1,h2,h3,.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;letter-spacing:.01em}
+h2{font-size:28px;margin:6px 0 12px;color:var(--gold2)}h3{font-size:20px;color:var(--gold2)}
+p{color:#d9cfae}.mut{color:var(--mut);font-size:13px}
+.card{background:linear-gradient(160deg,var(--bk3),var(--bk2));border:1px solid #3d3213;border-radius:20px;padding:16px;margin:12px 0}
+.gold{background:linear-gradient(135deg,var(--gold2),var(--gold) 55%,var(--deep));color:#120d00;border:0}
+.gold p,.gold h3,.gold .mut{color:#120d00}
+.btn{display:inline-block;border:0;border-radius:999px;padding:13px 22px;font:700 15px Manrope;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#120d00;cursor:pointer;transition:transform .15s}
+.btn:active{transform:scale(.97)}.btn.ghost{background:transparent;color:var(--gold2);border:1px solid var(--gold)}.btn.sm{padding:8px 14px;font-size:13px}.btn.full{width:100%}
+input,select,textarea{width:100%;background:#0b0905;color:var(--ink);border:1px solid #4a3c14;border-radius:14px;padding:12px;font:inherit;margin:6px 0}
+textarea{min-height:90px}label{font-size:13px;color:var(--mut)}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between}.wrap{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:5px 11px;border-radius:999px;border:1px solid #5b4a18;font-size:12px;color:var(--gold2);background:#171207}
+.chip.on{background:var(--gold);color:#120d00;border-color:var(--gold)}
+.bar{height:8px;border-radius:9px;background:#2a2410;overflow:hidden;margin:5px 0 10px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--deep),var(--gold2));transition:width .6s}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:#0a0804ee;backdrop-filter:blur(10px);border-top:1px solid #3d3213;padding:8px 4px calc(8px + env(safe-area-inset-bottom))}
+nav button{flex:1;background:none;border:0;color:var(--mut);font:600 11px Manrope;padding:6px 0;cursor:pointer}nav button b{display:block;font-size:19px;font-weight:400}
+nav button.on{color:var(--gold2)}
+#ai{position:fixed;right:16px;bottom:84px;width:54px;height:54px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--gold2),var(--deep));color:#120d00;font-size:22px;box-shadow:0 6px 24px #d4af3755;cursor:pointer}
+.logo{display:flex;flex-direction:column;align-items:center;gap:8px;margin:18px 0}
+.disc{width:112px;height:112px;border-radius:50%;background:#000;border:3px solid var(--gold);box-shadow:0 0 0 6px #000,0 0 0 8px var(--deep),0 0 40px #d4af3744;display:flex;align-items:center;justify-content:center}
+.word{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:25px;color:var(--gold2);letter-spacing:.14em;display:flex;align-items:center}
+.word .o{position:relative;display:inline-block;width:.9em;height:.9em;border:2px solid var(--gold2);border-radius:50%;margin:0 2px}
+.word .o::after{content:'✦';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.5em;color:var(--gold)}
+.big{font-size:44px;line-height:1.05;text-align:center}
+.steps{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:14px 0}
+.q{font-size:19px;font-family:'Cormorant Garamond',serif;font-weight:700;margin:8px 0}
+.opt{display:block;width:100%;text-align:left;background:#0b0905;border:1px solid #4a3c14;color:var(--ink);border-radius:14px;padding:12px;margin:7px 0;font:inherit;cursor:pointer}
+.opt:active{border-color:var(--gold)}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--gold);color:#120d00;padding:10px 18px;border-radius:999px;font-weight:700;z-index:9;max-width:90%}
+.vid{aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000;border:1px solid var(--deep);position:relative}
+.vid iframe,.vid video{width:100%;height:100%;border:0}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:20px;background:radial-gradient(circle at 80% 0,#3a2c07,#000 70%)}
+.slide h3{font-size:24px}.tag{font-size:11px;color:var(--mut)}
+.call{height:62vh;border-radius:16px;overflow:hidden;border:1px solid var(--gold)}.call iframe{width:100%;height:100%;border:0}
+.warn{border-left:3px solid var(--gold);padding:8px 12px;background:#17120640;border-radius:0 12px 12px 0;color:var(--mut);font-size:12.5px;margin:10px 0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body><div id="app"></div>
+<button id="ai" aria-label="NOVA AI" onclick="aiOpen()">✦</button>
+<nav id="nav"></nav>
+<script>
+const SKILLS=['Communication','Creativity','Leadership','Design','Coding','Business','Finance','Marketing','Writing','Public speaking','Teaching','Problem solving','Teamwork','Entrepreneurship','Art','Music','Sports'];
+let mem=null;
+const load=()=>{try{return JSON.parse(localStorage.getItem('nova_v1')||'null')}catch(e){return mem}};
+let DB=load()||{users:[],me:null,feedback:[],urls:{},listings:[],bookings:[]};
+const save=()=>{try{localStorage.setItem('nova_v1',JSON.stringify(DB))}catch(e){mem=DB}};
+const me=()=>DB.users.find(u=>u.id===DB.me);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,8).toUpperCase();
+const LV=[[85,'Verified'],[65,'Advanced'],[45,'Intermediate'],[25,'Developing'],[0,'Beginner']];
+const lvl=s=>LV.find(l=>s>=l[0])[1];
+const ulevel=xp=>Math.floor(xp/300)+1;
+const today=()=>new Date().toISOString().slice(0,10);
+
+/* ---------- content ---------- */
+const QUIZ=[
+['A friend needs help planning a school event. You…',[['Take charge and assign roles',{Leadership:12,Teamwork:6}],['Design the poster and theme',{Design:12,Creativity:8}],['Make a budget sheet',{Finance:12,Business:6}],['Pitch it to everyone',{'Public speaking':12,Communication:8}]]],
+['Pick a free Saturday project',[['Build a small website',{Coding:14,'Problem solving':6}],['Record and edit a short video',{Creativity:10,Marketing:8}],['Write a story or article',{Writing:14,Creativity:4}],['Teach a friend something',{Teaching:14,Communication:6}]]],
+['A team disagrees. You…',[['Listen and find middle ground',{Teamwork:12,Communication:8}],['Break it into smaller problems',{'Problem solving':14}],['Decide quickly and move on',{Leadership:12}],['Sketch the options visually',{Art:8,Design:8}]]],
+['Which idea excites you most?',[['A tiny business selling something',{Entrepreneurship:14,Business:6}],['A song or beat',{Music:14}],['A sports training plan',{Sports:14,Leadership:4}],['A viral ad campaign',{Marketing:14,Creativity:6}]]],
+['Someone gives you ₹1,000 to grow. You…',[['Test a product with friends',{Entrepreneurship:12,Business:8}],['Save and track every rupee',{Finance:14}],['Buy tools to learn a craft',{Art:6,Creativity:6,Coding:4}],['Promote a cause online',{Marketing:10,Communication:6}]]],
+['Mini challenge: you have 10 seconds to introduce yourself. You…',[['Say it confidently on camera',{'Public speaking':12,Communication:6}],['Write a punchy one-liner',{Writing:12}],['Make a quick logo',{Design:10,Art:6}],['Ask them about themselves first',{Communication:10,Teamwork:6}]]]
+];
+const CH=[
+{id:'c1',t:'Create a 30-second advertisement',cat:'Marketing',d:'Easy',xp:100,sk:{Marketing:8,Creativity:6},brief:'Script and shoot (or storyboard) a 30-second ad for any everyday product.'},
+{id:'c2',t:'Design a poster for a school event',cat:'Design',d:'Easy',xp:80,sk:{Design:9,Creativity:5},brief:'Upload an image or PDF of your poster, plus a line on why you chose the layout.'},
+{id:'c3',t:'Write a 300-word article',cat:'Writing',d:'Easy',xp:80,sk:{Writing:10},brief:'Pick a topic you care about. Hook the reader in the first line.'},
+{id:'c4',t:'Give a 60-second speech',cat:'Public speaking',d:'Medium',xp:120,sk:{'Public speaking':10,Communication:6},brief:'Record a video or paste a link. Open with a story, end with one clear ask.'},
+{id:'c5',t:'Solve a business problem',cat:'Business',d:'Medium',xp:150,sk:{Business:9,'Problem solving':8},brief:'A cafe loses customers after 6pm. Propose three fixes and pick one.'},
+{id:'c6',t:'Create a monthly financial plan',cat:'Finance',d:'Medium',xp:150,sk:{Finance:10},brief:'Plan ₹5,000 across needs, wants and savings. Explain each choice.'},
+{id:'c7',t:'Edit a 60-second video',cat:'Editing',d:'Medium',xp:160,sk:{Creativity:8,Design:6},brief:'Cut raw clips into a tight story with sound. Share a link or upload the file.'},
+{id:'c8',t:'Build a one-page website',cat:'Coding',d:'Hard',xp:220,sk:{Coding:12,'Problem solving':6},brief:'Share a live link or repo. Say what you built and what was hardest.'}
+];
+const LESSONS=[
+{id:'l1',t:'Scripting a short video',cat:'Scripting',by:'Sample lesson',steps:[['Start with the hook','The first 3 seconds decide if people stay. Open with a question, a surprise or a bold claim.'],['One idea per video','Write the single sentence your viewer should remember. Cut everything that does not serve it.'],['Write for the ear','Read your script aloud. If you stumble, rewrite. Short sentences win.'],['Match words to visuals','Draw a two-column table: what we hear, what we see. Every line needs a shot.'],['End with one action','Tell viewers exactly what to do next: follow, try it, reply.']]},
+{id:'l2',t:'Communicating with clarity',cat:'Communication',by:'Sample lesson',steps:[['Know your point','Before you speak, finish this sentence: "I want them to understand that…"'],['Structure: point, reason, example','Say the point first, back it with one reason, make it real with one example.'],['Listen to reply, not to wait','Repeat back what you heard in your own words before answering.'],['Use your voice','Slow down, pause after key ideas, vary your pitch.'],['Ask for feedback','End with "What was unclear?" and improve the next time.']]},
+{id:'l3',t:'Video editing basics',cat:'Editing',by:'Sample lesson',steps:[['Organise before you cut','Name clips, sort them into folders, and mark your best takes first.'],['Cut on action','Switch shots in the middle of a movement so the cut feels invisible.'],['Pace with sound','Audio carries the edit. Fix levels first, then add music underneath the voice.'],['Trim the fat','Remove the first and last second of most clips. Tighter is stronger.'],['Export for the platform','Vertical 9:16 for reels, 16:9 for YouTube. Check captions before you post.']]}
+];
+const SAMPLE_LIST=[
+{id:'s1',by:'Aarav (sample)',teach:'Video Editing',wants:'Excel',desc:'I edit reels and shorts. Sample listing for demonstration.',level:'Intermediate',dur:45,price:0,sample:1},
+{id:'s2',by:'Meera (sample)',teach:'Excel',wants:'Video Editing',desc:'Spreadsheets for school projects. Sample listing for demonstration.',level:'Intermediate',dur:45,price:0,sample:1},
+{id:'s3',by:'Kabir (sample)',teach:'Public Speaking',wants:'Design',desc:'Debate and stage practice. Sample listing for demonstration.',level:'Advanced',dur:30,price:149,sample:1}
+];
+const OPPS=[
+['Competition','Youth Pitch Challenge','Pitch an idea in 3 minutes.',['Entrepreneurship','Public speaking','Business']],
+['Workshop','Short Video Storytelling','Learn scripting and editing in a weekend.',['Creativity','Writing','Marketing']],
+['Mentorship','Design Mentor Circle','Monthly feedback on your portfolio.',['Design','Art','Creativity']],
+['Project','Community App Team','Join a student-built app project.',['Coding','Teamwork','Problem solving']],
+['Scholarship','Money Basics Resource Pack','Free finance guides for teens.',['Finance','Business']],
+['Youth program','Young Leaders Camp','Leadership and teamwork training.',['Leadership','Teamwork','Communication']]
+];
+const CAREERS=[
+['Content creator / video producer',['Creativity','Writing','Marketing','Design'],'Storytelling, editing, audience growth'],
+['Software developer',['Coding','Problem solving','Teamwork'],'Programming, debugging, collaboration'],
+['Marketing specialist',['Marketing','Communication','Creativity'],'Campaigns, analytics, copywriting'],
+['Entrepreneur',['Entrepreneurship','Business','Leadership','Finance'],'Validation, selling, budgeting'],
+['Educator / trainer',['Teaching','Communication','Public speaking'],'Lesson design, explaining, patience'],
+['Designer / illustrator',['Design','Art','Creativity'],'Layout, colour, tools'],
+['Finance analyst',['Finance','Problem solving','Business'],'Modelling, reporting, reasoning'],
+['Coach / sports professional',['Sports','Leadership','Teamwork'],'Training design, motivation']
+];
+const BADGES=[
+['First Challenge','Complete one challenge',u=>u.done.length>=1],
+['Skill Builder','Reach Developing in any skill',u=>Object.values(u.skills).some(s=>s>=25)],
+['Team Player','Join a project or exchange',u=>u.log.some(l=>l.k==='team')],
+['Teacher','Publish a teaching listing',u=>DB.listings.some(l=>l.uid===u.id)],
+['Creator','Complete 3 challenges',u=>u.done.length>=3],
+['Problem Solver','Score 80+ on a Business or Coding challenge',u=>u.log.some(l=>l.k==='ch'&&l.score>=80&&['Business','Coding'].includes(l.cat))],
+['Rising Star','Reach level 3',u=>ulevel(u.xp)>=3],
+['Portfolio Builder','Add 2 portfolio items',u=>u.portfolio.length>=2]
+];
+
+/* ---------- state / helpers ---------- */
+let tab='home',sub=null,qi=0,qacc={};
+const go=(t,s=null)=>{tab=t;sub=s;render();window.scrollTo(0,0)};
+function toast(m){const e=document.createElement('div');e.className='toast';e.textContent=m;document.body.append(e);setTimeout(()=>e.remove(),2400)}
+function award(u,xp,sk,entry){
+ u.xp+=xp;for(const k in sk)u.skills[k]=Math.min(100,(u.skills[k]||0)+sk[k]);
+ const d=today(),last=u.lastDay;
+ if(last!==d){const y=new Date(Date.now()-864e5).toISOString().slice(0,10);u.streak=last===y?u.streak+1:1;u.lastDay=d}
+ u.log.push({t:Date.now(),xp,...entry});
+ BADGES.forEach(b=>{if(!u.badges.includes(b[0])&&b[2](u)){u.badges.push(b[0]);toast('Badge unlocked: '+b[0])}});
+ save();
+}
+const bars=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="mut">${v} · ${lvl(v)}</span></div><div class="bar"><i style="width:${v}%"></i></div>`).join('');
+const logoSm=()=>`<div class="word" style="font-size:19px">N<span class="o"></span>VA</div>`;
+const guard=()=>{if(!me()){go('auth');return false}return true};
+
+/* ---------- views ---------- */
+function vHome(){const u=me();return `
+<div class="logo"><div class="disc"><div class="word" style="font-size:28px">N<span class="o"></span>VA</div></div></div>
+<h1 class="big">NOVA</h1>
+<p class="serif" style="text-align:center;font-size:21px;color:var(--gold2);margin:8px 0">A journey from potential to possibility.</p>
+<p style="text-align:center;margin:12px 4px">Discover what you're good at. Learn useful skills through challenges. Build proof of your abilities. Connect, collaborate, teach and discover where your skills can take you.</p>
+<div style="text-align:center"><button class="btn" onclick="${u?"go('discover')":"go('auth')"}">${u?'Continue your journey':'Start your journey'}</button></div>
+<div class="steps">${['Discover','Learn','Practice','Prove','Collaborate','Teach','Earn','Explore'].map((s,i)=>`<span class="chip">${s}</span>${i<7?'<span class="mut">›</span>':''}`).join('')}</div>
+<div class="card gold"><p class="mut">Today's mission</p><h3>Create a 30-second advertisement</h3><p>+100 XP · Marketing + Creativity</p><br><button class="btn sm" style="background:#120d00;color:var(--gold2)" onclick="openCh('c1')">Take the mission</button></div>
+${u?`<div class="card"><div class="row"><b>Level ${ulevel(u.xp)}</b><span class="mut">${u.xp} XP · ${u.streak||0}-day streak</span></div><div class="bar"><i style="width:${u.xp%300/3}%"></i></div></div>`:''}
+<h2>Learn it like a game</h2>
+<div class="card"><p>Daily missions, XP, skill levels, streaks and badges. Every challenge you finish raises your XP and the Skill DNA scores it demonstrates, and unlocks harder challenges.</p></div>`}
+
+function vAuth(){const m=sub||'signup';return `
+<div class="logo"><div class="disc" style="width:84px;height:84px"><div class="word" style="font-size:19px">N<span class="o"></span>VA</div></div></div>
+<h2 style="text-align:center">${m==='signup'?'Create your account':m==='login'?'Welcome back':'Reset password'}</h2>
+<div class="card">
+${m==='signup'?`<label>Name</label><input id="an"><label>I am a</label><select id="at"><option>Teen / Student</option><option>School / College</option><option>Business / Organisation</option></select><label>Age</label><input id="aa" type="number" min="5" max="99">`:''}
+<label>Email</label><input id="ae" type="email" autocomplete="email">
+${m!=='forgot'?`<label>Password</label><input id="ap" type="password" autocomplete="${m==='login'?'current-password':'new-password'}">`:''}
+<br><button class="btn full" onclick="auth('${m}')">${m==='signup'?'Sign up':m==='login'?'Log in':'Reset password'}</button>
+<p class="mut" style="text-align:center;margin-top:12px">${m==='signup'?`Have an account? <a href="#" style="color:var(--gold2)" onclick="go('auth','login');return false">Log in</a>`:`<a href="#" style="color:var(--gold2)" onclick="go('auth','signup');return false">Create account</a> · <a href="#" style="color:var(--gold2)" onclick="go('auth','forgot');return false">Forgot password</a>`}</p></div>
+<div class="warn">Demo mode: accounts live on this device only. Real sign-up, password reset emails and cross-device data need a backend such as Supabase.</div>`}
+function auth(m){
+ const e=(document.getElementById('ae').value||'').trim().toLowerCase(),p=(document.getElementById('ap')||{}).value;
+ if(!/\S+@\S+\.\S+/.test(e))return toast('Enter a valid email');
+ if(m==='forgot'){const u=DB.users.find(x=>x.email===e);if(!u)return toast('No account with that email');const np=prompt('Enter a new password (min 6 characters)');if(np&&np.length>=6){u.pass=btoa(np);save();toast('Password updated');go('auth','login')}return}
+ if(!p||p.length<6)return toast('Password needs 6+ characters');
+ if(m==='login'){const u=DB.users.find(x=>x.email===e&&x.pass===btoa(p));if(!u)return toast('Email or password is wrong');if(u.suspended)return toast('This account is suspended');DB.me=u.id;save();return go(u.dna?'profile':'discover')}
+ const n=document.getElementById('an').value.trim(),a=+document.getElementById('aa').value;
+ if(!n)return toast('Add your name');if(!a)return toast('Add your age');
+ if(DB.users.find(x=>x.email===e))return toast('That email is already registered');
+ const u={id:uid(),name:n,email:e,pass:btoa(p),type:document.getElementById('at').value,age:a,minor:a<18,skills:{},xp:0,streak:0,badges:[],done:[],log:[],portfolio:[],plan:null,dna:false,privacy:{showEmail:false,showCity:false}};
+ DB.users.push(u);DB.me=u.id;save();go('discover');
+ if(u.minor)toast('Under 18: a guardian must approve paid sessions')
+}
+
+function vDiscover(){if(!guard())return'';const u=me();
+ if(sub==='quiz'){const q=QUIZ[qi];return `<p class="mut">Question ${qi+1} of ${QUIZ.length}</p><div class="bar"><i style="width:${qi/QUIZ.length*100}%"></i></div><div class="q">${esc(q[0])}</div>${q[1].map((o,i)=>`<button class="opt" onclick="pick(${i})">${esc(o[0])}</button>`).join('')}`}
+ if(!u.dna)ret
