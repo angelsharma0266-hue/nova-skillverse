@@ -174,4 +174,128 @@ function auth(m){
 
 function vDiscover(){if(!guard())return'';const u=me();
  if(sub==='quiz'){const q=QUIZ[qi];return `<p class="mut">Question ${qi+1} of ${QUIZ.length}</p><div class="bar"><i style="width:${qi/QUIZ.length*100}%"></i></div><div class="q">${esc(q[0])}</div>${q[1].map((o,i)=>`<button class="opt" onclick="pick(${i})">${esc(o[0])}</button>`).join('')}`}
- if(!u.dna)ret
+ if(!u.dna)return `<h2>Discover your Skill DNA</h2><div class="card"><p>Six quick questions and mini-challenges give you a starting map across 17 skills. It sharpens as you complete real challenges.</p><br><button class="btn" onclick="qi=0;qacc={};go('discover','quiz')">Start discovery</button></div>${dnaNote()}`;
+ const sorted=Object.entries(u.skills).sort((a,b)=>b[1]-a[1]);
+ const top=sorted.slice(0,3),dev=sorted.filter(s=>s[1]>=15&&s[1]<45).slice(0,3),low=SKILLS.map(s=>[s,u.skills[s]||0]).sort((a,b)=>a[1]-b[1]).slice(0,3);
+ return `<h2>Your Skill DNA</h2>
+ <div class="card gold"><p class="mut">Strengths</p><h3>${top.map(t=>esc(t[0])).join(' · ')}</h3></div>
+ <div class="card">${bars(Object.fromEntries(SKILLS.map(s=>[s,u.skills[s]||0])))}</div>
+ <div class="card"><b>Being developed</b><p>${dev.map(d=>esc(d[0])).join(', ')||'Complete challenges to build this list'}</p><br><b>Areas to improve</b><p>${low.map(d=>esc(d[0])).join(', ')}</p></div>
+ <h3>Recommended challenges</h3>${CH.filter(c=>!u.done.includes(c.id)).sort((a,b)=>Math.max(...Object.keys(b.sk).map(k=>u.skills[k]||0))-Math.max(...Object.keys(a.sk).map(k=>u.skills[k]||0))).slice(0,3).map(chCard).join('')||'<p class="mut">You finished them all.</p>'}
+ <div class="card"><b>Explore careers</b><br><button class="btn sm ghost" style="margin-top:8px" onclick="go('opp','careers')">See possible directions</button></div>
+ <button class="btn ghost sm" onclick="qi=0;qacc={};go('discover','quiz')">Retake discovery</button>${dnaNote()}`}
+const dnaNote=()=>`<div class="warn">Skill DNA is guidance, not a scientific prediction or professional assessment.</div>`;
+function pick(i){const o=QUIZ[qi][1][i][1];for(const k in o)qacc[k]=(qacc[k]||0)+o[k];qi++;
+ if(qi>=QUIZ.length){const u=me();for(const k in qacc)u.skills[k]=Math.max(u.skills[k]||0,Math.min(60,qacc[k]*2));u.dna=true;award(u,150,{},{k:'dna'});toast('+150 XP · Skill DNA ready');go('discover')}else render()}
+
+const chCard=c=>`<div class="card"><div class="row"><h3>${esc(c.t)}</h3><span class="chip">+${c.xp} XP</span></div><p class="mut">${c.cat} · ${c.d}</p><div class="wrap" style="margin:8px 0">${Object.keys(c.sk).map(k=>`<span class="chip">${k}</span>`).join('')}</div><button class="btn sm" onclick="openCh('${c.id}')">Open</button></div>`;
+function openCh(id){if(!guard())return;go('create',id)}
+let cf='All';
+function vCreate(){if(!guard())return'';const u=me();
+ if(sub){const c=CH.find(x=>x.id===sub),r=u.log.filter(l=>l.k==='ch'&&l.id===c.id).pop();
+  return `<button class="btn sm ghost" onclick="go('create')">Back</button><h2 style="margin-top:12px">${esc(c.t)}</h2><p>${esc(c.brief)}</p><p class="mut">${c.cat} · ${c.d} · +${c.xp} XP</p>
+  ${r?`<div class="card gold"><h3>Score ${r.score}/100</h3><p><b>Strengths:</b> ${esc(r.str)}</p><p><b>To improve:</b> ${esc(r.imp)}</p><p><b>Next:</b> ${esc(r.next)}</p></div>`:''}
+  <div class="card"><label>Your work (text)</label><textarea id="st" placeholder="Describe or paste your work"></textarea><label>Link (optional)</label><input id="sl" placeholder="https://"><label>File (image, PDF or video)</label><input id="sf" type="file" accept="image/*,application/pdf,video/*"><br><button class="btn full" onclick="submitCh('${c.id}')">${r?'Submit again':'Submit work'}</button></div>
+  <div class="warn">Demo scoring is automatic and based on effort and detail. Real reviews, file storage and expert feedback need a backend.</div>`}
+ const cats=['All',...new Set(CH.map(c=>c.cat))];
+ return `<h2>Create</h2><div class="wrap">${cats.map(c=>`<span class="chip ${cf===c?'on':''}" onclick="cf='${c}';render()">${c}</span>`).join('')}</div>${CH.filter(c=>cf==='All'||c.cat===cf).map(chCard).join('')}`}
+function submitCh(id){const u=me(),c=CH.find(x=>x.id===id),t=document.getElementById('st').value.trim(),l=document.getElementById('sl').value.trim(),f=document.getElementById('sf').files[0];
+ if(!t&&!l&&!f)return toast('Add text, a link or a file');
+ if(l&&!/^https?:\/\//.test(l))return toast('Links must start with http');
+ let s=50+Math.min(25,Math.floor(t.length/12))+(l?10:0)+(f?10:0);s=Math.min(96,s);
+ const first=!u.done.includes(id);
+ const r={k:'ch',id,cat:c.cat,score:s,str:s>=75?'Clear, detailed and complete':'You got started and shared real work',imp:s>=75?'Push for a stronger opening and a clear result':'Add more detail and show evidence (link or file)',next:(CH.find(x=>x.cat!==c.cat&&!u.done.includes(x.id)&&x.id!==id)||{t:'Repeat at a harder level'}).t};
+ if(first)u.done.push(id);
+ const sk={};for(const k in c.sk)sk[k]=Math.round(c.sk[k]*s/100*(first?1:.3));
+ award(u,first?c.xp:Math.round(c.xp/4),sk,r);
+ u.portfolio.push({id:uid(),title:c.t,desc:t.slice(0,200),skill:c.cat,date:today(),evidence:l||(f?f.name:'Text'),result:s+'/100',vis:'Private'});save();
+ toast('Scored '+s+' · XP added');render()}
+
+function vLearn(){if(!guard())return'';const u=me();const m=sub||'lessons';
+ const tabs=`<div class="wrap" style="margin-bottom:8px">${[['lessons','Lessons'],['teachers','Teachers'],['teach','Teach & earn'],['sessions','My sessions']].map(t=>`<span class="chip ${m===t[0]?'on':''}" onclick="go('learn','${t[0]}')">${t[1]}</span>`).join('')}</div>`;
+ if(m==='lessons')return `<h2>Learn</h2>${tabs}<p class="mut">Example lessons on scripting, communication and editing. Open one to watch.</p>${LESSONS.map(l=>`<div class="card"><span class="chip">${l.cat}</span><h3 style="margin:8px 0">${esc(l.t)}</h3><p class="mut">${l.steps.length} steps · ${l.by}</p><br><button class="btn sm" onclick="go('learn','L'+'${l.id}')">Watch lesson</button></div>`).join('')}`;
+ if(m[0]==='L'){const l=LESSONS.find(x=>x.id===m.slice(1));return `<button class="btn sm ghost" onclick="go('learn','lessons')">Back</button><h2 style="margin-top:10px">${esc(l.t)}</h2>${player(l)}
+  <div class="card"><label>Use your own video (YouTube or .mp4 link)</label><input id="vu" value="${esc(DB.urls[l.id]||'')}" placeholder="https://"><button class="btn sm" onclick="setUrl('${l.id}')">Save video</button></div>
+  <button class="btn full" onclick="finishLesson('${l.id}')">Mark lesson complete</button>`}
+ if(m==='teachers'){const all=[...DB.listings,...SAMPLE_LIST];return `<h2>Learn</h2>${tabs}<input id="q" placeholder="Search skill or teacher" oninput="render()" value="${esc(window._q||'')}">${all.filter(l=>!window._q||(l.teach+l.by+l.desc).toLowerCase().includes(window._q.toLowerCase())).map(l=>`<div class="card"><div class="row"><h3>${esc(l.teach)}</h3><span class="chip">${l.price?'₹'+l.price:'Skill exchange'}</span></div><p class="mut">${esc(l.by)} · ${esc(l.level)} · ${l.dur} min</p><p>${esc(l.desc)}</p>${l.wants?`<p class="mut">Wants to learn: ${esc(l.wants)}</p>`:''}<br><button class="btn sm" onclick="book('${l.id}')">${l.price?'Request session':'Request exchange'}</button></div>`).join('')}${matches(u)}`}
+ if(m==='teach')return `<h2>Teach & earn</h2>${tabs}<div class="card"><label>Skill you can teach</label><input id="tt"><label>Skill you want to learn (for exchanges)</label><input id="tw"><label>Description</label><textarea id="td"></textarea><label>Level</label><select id="tl"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select><label>Duration (min)</label><input id="tdu" type="number" value="45"><label>Price in ₹ (0 = exchange only)</label><input id="tp" type="number" value="0"><br><button class="btn full" onclick="addListing()">Publish listing</button></div><div class="warn">${u.minor?'You are under 18: paid sessions need guardian consent before going live. ':''}Never share phone numbers or addresses. Sessions run inside NOVA.</div>`;
+ const mine=DB.bookings.filter(b=>b.stu===u.id||b.teacher===u.id);
+ return `<h2>My sessions</h2>${tabs}${mine.map(b=>`<div class="card"><h3>${esc(b.skill)}</h3><p class="mut">With ${esc(b.withName)} · Room code <b>${b.room}</b></p><button class="btn sm" onclick="go('call','${b.room}')">Join video call</button></div>`).join('')||'<p class="mut">No sessions yet. Request one from Teachers.</p>'}<div class="card"><label>Have a room code from your session partner?</label><input id="rc" placeholder="e.g. K4X9PQ"><button class="btn sm" onclick="go('call',document.getElementById('rc').value.trim().toUpperCase())">Join with code</button></div>`}
+function matches(u){const mine=DB.listings.filter(l=>l.uid===u.id);if(!mine.length)return'';const all=[...DB.listings,...SAMPLE_LIST].filter(l=>l.uid!==u.id);
+ const m=all.filter(o=>mine.some(l=>l.wants&&o.teach.toLowerCase()===l.wants.toLowerCase()&&o.wants&&o.wants.toLowerCase()===l.teach.toLowerCase()));
+ return m.length?`<h3>Skill matches</h3>${m.map(o=>`<div class="card gold"><h3>${esc(o.by)}</h3><p>Teaches ${esc(o.teach)} and wants ${esc(o.wants)}. A swap with you.</p></div>`).join('')}`:''}
+function addListing(){const u=me(),t=document.getElementById('tt').value.trim();if(!t)return toast('Add the skill');
+ DB.listings.push({id:uid(),uid:u.id,by:u.name,teach:t,wants:document.getElementById('tw').value.trim(),desc:document.getElementById('td').value.trim(),level:document.getElementById('tl').value,dur:+document.getElementById('tdu').value||45,price:+document.getElementById('tp').value||0});
+ award(u,60,{Teaching:6},{k:'teach'});toast('Listing published');go('learn','teachers')}
+function book(id){const u=me(),l=[...DB.listings,...SAMPLE_LIST].find(x=>x.id===id);
+ if(l.uid===u.id)return toast('This is your own listing');
+ if(l.price&&u.minor&&!confirm('Paid sessions for under-18s need guardian approval. Continue and notify your guardian?'))return;
+ const room=uid()+uid().slice(0,2);DB.bookings.push({id:uid(),room,skill:l.teach,stu:u.id,teacher:l.uid||null,withName:l.by});
+ if(!l.price)award(u,40,{Teamwork:4},{k:'team'});else save();
+ toast('Session created · room '+room);go('learn','sessions')}
+function setUrl(id){DB.urls[id]=document.getElementById('vu').value.trim();save();toast('Video saved');render()}
+function finishLesson(id){const u=me();if(u.log.some(l=>l.k==='lesson'&&l.id===id))return toast('Already completed');award(u,50,{Communication:3,Creativity:3},{k:'lesson',id});toast('+50 XP');go('learn','lessons')}
+function player(l){const url=DB.urls[l.id];
+ if(url){const y=url.match(/(?:youtu\.be\/|v=)([\w-]{11})/);
+  if(y)return `<div class="vid"><iframe src="https://www.youtube.com/embed/${y[1]}" allow="accelerometer;encrypted-media;picture-in-picture" allowfullscreen></iframe></div>`;
+  if(/^https?:\/\//.test(url))return `<div class="vid"><video src="${esc(url)}" controls playsinline></video></div>`}
+ return `<div class="vid" id="pl"></div><div class="row" style="margin-top:8px"><button class="btn sm" id="pp" onclick="togglePlay('${l.id}')">Play</button><div class="bar" style="flex:1;margin:0"><i id="pg" style="width:0"></i></div></div><p class="mut">Animated sample lesson. Add your own video below to replace it.</p>`}
+let tm=null,si=0;
+function togglePlay(id){const l=LESSONS.find(x=>x.id===id),box=document.getElementById('pl'),b=document.getElementById('pp');
+ if(tm){clearInterval(tm);tm=null;b.textContent='Play';return}
+ b.textContent='Pause';if(si>=l.steps.length)si=0;
+ const show=()=>{const s=l.steps[si];box.innerHTML=`<div class="slide"><span class="tag">Step ${si+1} of ${l.steps.length}</span><h3>${esc(s[0])}</h3><p>${esc(s[1])}</p></div>`;document.getElementById('pg').style.width=((si+1)/l.steps.length*100)+'%'};
+ show();tm=setInterval(()=>{si++;if(si>=l.steps.length){clearInterval(tm);tm=null;b.textContent='Replay';si=0;return}show()},5500)}
+
+function vCall(){if(!guard())return'';const r=sub;if(!r||r.length<4)return `<h2>Video call</h2><p>Enter a valid room code from My sessions.</p><button class="btn" onclick="go('learn','sessions')">My sessions</button>`;
+ const u=me();return `<h2>Live session</h2><p class="mut">Room <b>${esc(r)}</b>. Share this code with your partner in NOVA messages. Both of you open My sessions and join.</p>
+ <div class="call"><iframe allow="camera;microphone;fullscreen;display-capture;autoplay" src="https://meet.jit.si/NOVA-${encodeURIComponent(r)}#userInfo.displayName=%22${encodeURIComponent(u.name)}%22&config.prejoinConfig.enabled=true"></iframe></div>
+ <br><button class="btn ghost full" onclick="go('learn','sessions')">Leave session</button>
+ <div class="warn">Powered by Jitsi Meet (free). Allow camera and microphone when asked. Test on two devices before presenting.</div>`}
+
+function vOpp(){if(!guard())return'';const u=me();
+ if(sub==='careers'){const sc=CAREERS.map(c=>[c,Math.round(c[1].reduce((a,k)=>a+(u.skills[k]||0),0)/c[1].length)]).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  return `<button class="btn sm ghost" onclick="go('opp')">Back</button><h2 style="margin-top:10px">Career directions</h2><p class="mut">Possible paths based on your Skill DNA and activity. None are guaranteed.</p>
+  ${sc.map(([c,s])=>{const need=c[1].filter(k=>(u.skills[k]||0)<45);const ch=CH.filter(x=>Object.keys(x.sk).some(k=>c[1].includes(k))&&!u.done.includes(x.id)).slice(0,2);return `<div class="card"><div class="row"><h3>${c[0]}</h3><span class="chip">${s}% match</span></div><p><b>Why:</b> your strongest overlap is ${c[1].filter(k=>(u.skills[k]||0)>0).sort((a,b)=>u.skills[b]-u.skills[a]).slice(0,2).join(' and ')||'still forming'}.</p><p><b>Skills still needed:</b> ${need.join(', ')||'Keep deepening what you have'}</p><p><b>Learning path:</b> ${c[2]}</p><p class="mut">Try: ${ch.map(x=>x.t).join(' · ')||'More advanced challenges'}</p></div>`}).join('')}${dnaNote()}`}
+ const top=Object.entries(u.skills).sort((a,b)=>b[1]-a[1]).slice(0,4).map(x=>x[0]);
+ const o=OPPS.map(x=>[x,x[3].filter(k=>top.includes(k)).length]).sort((a,b)=>b[1]-a[1]);
+ return `<h2>Opportunities</h2><button class="btn sm ghost" onclick="go('opp','careers')">Career directions</button><div class="warn">Sample opportunities for demonstration. Opportunities are never a guarantee of a job or placement.</div>${o.map(([x,s])=>`<div class="card"><span class="chip">${x[0]}</span>${s?' <span class="chip on">Recommended for you</span>':''}<h3 style="margin:8px 0">${x[1]}</h3><p>${x[2]}</p></div>`).join('')}`}
+
+function vProfile(){if(!guard())return'';const u=me(),L=u.log;let c=0;const pts=L.map(l=>c+=l.xp);const max=Math.max(1,c);
+ const poly=pts.length>1?pts.map((p,i)=>`${i/(pts.length-1)*300},${70-p/max*65}`).join(' '):'';
+ return `<div class="card gold"><div class="row"><div><h3 style="font-size:26px">${esc(u.name)}</h3><p class="mut">${esc(u.type)} · Level ${ulevel(u.xp)}</p></div><div style="text-align:right"><b style="font-size:24px">${u.xp}</b><p class="mut">XP · ${u.streak||0}-day streak</p></div></div></div>
+ <h3>Skill progress</h3><div class="card">${bars(Object.fromEntries(SKILLS.filter(s=>u.skills[s]).map(s=>[s,u.skills[s]])))||'<p class="mut">Complete discovery first.</p>'}</div>
+ <h3>XP over time</h3><div class="card">${poly?`<svg viewBox="0 0 300 75" width="100%"><polyline fill="none" stroke="#d4af37" stroke-width="2.5" points="${poly}"/></svg>`:'<p class="mut">Finish two activities to see your graph.</p>'}<p class="mut">${u.done.length} challenges · ${u.portfolio.length} portfolio items · ${L.filter(l=>l.k==='lesson').length} lessons</p></div>
+ <h3>Badges</h3><div class="card wrap">${BADGES.map(b=>`<span class="chip ${u.badges.includes(b[0])?'on':''}" title="${b[1]}">${b[0]}</span>`).join('')}</div>
+ <h3>Proof portfolio</h3>${u.portfolio.map((p,i)=>`<div class="card"><div class="row"><b>${esc(p.title)}</b><span class="chip">${p.result}</span></div><p class="mut">${esc(p.skill)} · ${p.date} · ${esc(p.evidence)}</p><select onchange="me().portfolio[${i}].vis=this.value;save()">${['Private','Connections','Public'].map(v=>`<option ${p.vis===v?'selected':''}>${v}</option>`).join('')}</select></div>`).join('')||'<p class="mut">Submit a challenge to add your first item.</p>'}
+ <h3>Plans</h3>${plans()}
+ <h3>Privacy</h3><div class="card"><p class="mut">Your email and exact location are never shown publicly.</p>${u.minor?'<p class="mut">Under 18: messaging is limited and paid sessions need guardian consent.</p>':''}</div>
+ <h3>Voices of NOVA</h3><div class="card"><p class="mut">Sample testimonial — for demonstration only.</p><p>"The challenges made practising skills feel like a game."</p></div>
+ <div class="card"><label>Rating</label><select id="fr"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select><label>What you liked</label><input id="fl"><label>What should improve</label><input id="fi"><label><input type="checkbox" id="fa" style="width:auto"> Submit anonymously</label><br><button class="btn sm" onclick="sendFb()">Send feedback</button></div>
+ <br><button class="btn ghost full" onclick="DB.me=null;save();go('home')">Log out</button>`}
+function plans(){const u=me(),P=[['Starter','₹1 one-time','Introductory access. Charged once, never recurring.'],['Plus','₹49/month or ₹499/year','Advanced Skill DNA, more challenges, analytics, more AI questions, career insights, portfolio customisation.'],['Pro','₹99/month or ₹999/year','Everything in Plus, plus advanced career roadmap, premium challenges, extra AI support, advanced portfolio.']];
+ return P.map(p=>`<div class="card ${u.plan===p[0]?'gold':''}"><div class="row"><h3>NOVA ${p[0].toUpperCase()}</h3></div><p><b>${p[1]}</b></p><p class="mut">${p[2]}</p><button class="btn sm" onclick="choosePlan('${p[0]}')">${u.plan===p[0]?'Selected':'Choose'}</button></div>`).join('')+`<div class="warn">No free trials. Payments are not connected in this build. Selecting a plan only saves your choice. Live Indian payments need a provider like Razorpay, with guardian consent for under-18s.</div>`}
+function choosePlan(p){me().plan=p;save();toast(p+' selected');render()}
+function sendFb(){const u=me();DB.feedback.push({rating:+document.getElementById('fr').value,like:document.getElementById('fl').value,improve:document.getElementById('fi').value,by:document.getElementById('fa').checked?'anonymous':u.id,t:Date.now()});save();toast('Thank you for the feedback');render()}
+
+/* ---------- AI helper (local, rule-based) ---------- */
+function aiOpen(){const u=me();const q=prompt('Ask NOVA (demo helper): skills, careers, next challenge, progress');if(!q)return;
+ const t=q.toLowerCase();let a;
+ if(!u)a='Sign up first so I can look at your progress.';
+ else if(/career/.test(t))a='Open Opportunities > Career directions for options based on your Skill DNA.';
+ else if(/next|challenge/.test(t))a='Try: '+(CH.find(c=>!u.done.includes(c.id))||{t:'a harder challenge'}).t+'.';
+ else if(/progress|xp|level/.test(t))a=`You have ${u.xp} XP, level ${ulevel(u.xp)}, ${u.done.length} challenges done.`;
+ else a='Pick one skill, finish a challenge in it, then add the result to your portfolio. Small, repeated steps win.';
+ alert('NOVA: '+a+'\n\n(Demo helper only. Real AI chat needs a backend API.)')}
+
+/* ---------- shell ---------- */
+const NAV=[['home','⌂','Home'],['discover','✦','Discover'],['learn','▶','Learn'],['create','✎','Create'],['opp','◎','Opportunities'],['profile','☺','Profile']];
+function render(){
+ if(tm&&!(tab==='learn'&&String(sub).startsWith('L'))){clearInterval(tm);tm=null;si=0}
+ const V={home:vHome,auth:vAuth,discover:vDiscover,learn:vLearn,create:vCreate,opp:vOpp,profile:vProfile,call:vCall};
+ document.getElementById('app').innerHTML=(tab!=='home'&&tab!=='auth'?`<div class="row" style="margin-bottom:6px">${logoSm()}<span class="mut">${me()?esc(me().name):''}</span></div>`:'')+V[tab]();
+ document.getElementById('nav').innerHTML=NAV.map(n=>`<button class="${tab===n[0]?'on':''}" onclick="go('${n[0]}')"><b>${n[1]}</b>${n[2]}</button>`).join('');
+ const q=document.getElementById('q');if(q){q.oninput=e=>{window._q=e.target.value;const p=e.target.selectionStart;render();const n=document.getElementById('q');n.focus();n.setSelectionRange(p,p)}}
+}
+render();
+</script></body></html>
